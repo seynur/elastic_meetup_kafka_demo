@@ -11,7 +11,7 @@ Vagrant.configure(2) do |config|
         # Avoid https://atlas.hashicorp.com/ubuntu/ since those are notoriously broken
         ubuntu.vm.box = "bento/ubuntu-16.04"
         ubuntu.vm.hostname = "meetup-kafka-elastic"
-        ubuntu.vm.network :forwarded_port, guest: 5601, host: 5681
+        ubuntu.vm.network :forwarded_port, guest: 5601, host: 5601
         ubuntu.vm.network :forwarded_port, guest: 3306, host: 3306
         ubuntu.vm.synced_folder "kafka-elastic/", "/kafka-elastic/"
     end

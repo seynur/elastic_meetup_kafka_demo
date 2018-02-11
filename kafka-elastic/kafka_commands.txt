@@ -1,3 +1,4 @@
+
 # Load the configuration for JSON converter
 confluent load jdbc_source_mysql_demo -d /kafka-elastic/templates/kafka-connect-jdbc-source.json
 

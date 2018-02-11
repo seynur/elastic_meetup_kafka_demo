@@ -16,7 +16,6 @@ Do a simple `vagrant up` by using [Vagrant](https://www.vagrantup.com)'s [Ansibl
 
 With the [Ansible playbooks](https://docs.ansible.com/ansible/playbooks.html) in the */kafka-elastic/* folder you can configure the whole system step by step. Just run them in the given order inside the Vagrant box:
 
-
 ```
 > vagrant ssh
 $ ansible-playbook /kafka-elastic/1_configure-elasticsearch.yml

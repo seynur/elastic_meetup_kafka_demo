@@ -1,0 +1,153 @@
+---
+
+- hosts: all
+  become: true
+  vars_files:
+    - vars.yml
+
+
+  tasks:
+  ###############################
+  # Basic configurations 
+  ###############################
+  - name: Get the platform (i386 or amd64) of the virtual machine
+    command: dpkg --print-architecture
+    register: print_architecture
+
+  - name: And set the actual platform value as a variable
+    set_fact:
+      platform: "{{ print_architecture.stdout }}"
+
+  - name: Get rid of Chef and Puppet to save some resources and autoremove unused packages to save some disk space
+    apt: name={{ item }} state=absent autoremove=yes
+    with_items:
+      - chef
+      - puppet
+
+  - name: Install unzip for unpacking files later on
+    apt: name=unzip state=latest
+
+  - name: Install Vim, because plain Vi is driving me crazy
+    apt: name=vim state=latest
+
+  - name: Install cURL, which is missing on the Bento image
+    apt: name=curl state=latest
+
+  - name: Install NTP to avoid time drift inside the VM
+    apt: name={{ item }} state=latest
+    with_items:
+      - ntp
+      - ntpdate
+
+  - name: Install the JRE
+    apt: name=openjdk-8-jre-headless state=latest update_cache=yes install_recommends=no
+
+  - name: Install pip to get current Python dependencies
+    apt: name=python-pip state=latest
+
+  ###############################
+  # MySQL
+  ###############################
+  - name: Install MySQL Server
+    apt: name={{ item }} state=latest update_cache=yes
+    with_items:
+    - python-mysqldb
+    - mysql-server
+    when: "platform == 'amd64'"
+
+  - name: Make sure MySQL autostarts
+    service: name=mysql enabled=yes state=started
+
+  - name: Update mysql root password
+    sudo: yes
+    mysql_user: 
+      name: root
+      password: "{{ mysql_root_password }}"
+      priv: "*.*:ALL,GRANT"
+      #login_user: root
+      #login_password: "{{ mysql_root_password }}"
+      #check_implicit_admin: yes
+
+  - name: Download MySQL Connector binary
+    get_url:
+      url: https://dev.mysql.com/get/Downloads/Connector-J/{{ mysql_connector_tgz }}
+      dest: /tmp/{{ mysql_connector_tgz }}
+
+  - name: Extract tar.gz file
+    command: tar xz -C /tmp -f /tmp/{{ mysql_connector_tgz }}
+
+  - name: Copy jar file to Kafka Connect JDBC location
+    copy: src=/tmp/mysql-connector-java-5.1.45/{{ mysql_connector_jar }} dest=/usr/share/java/kafka-connect-jdbc/{{ mysql_connector_jar }}
+
+
+  ###############################
+  # Confluent
+  ###############################
+  - name: Get the Confluent public key 
+    apt_key:
+      url: https://packages.confluent.io/deb/4.0/archive.key
+      state: present
+    when: "platform == 'amd64'"
+
+  - name: Add the Confluent repository
+    apt_repository:
+      repo: "deb [arch=amd64] https://packages.confluent.io/deb/4.0 stable main"
+      state: present
+    when: "platform == 'amd64'"
+
+  - name: Install Confluent Open Source
+    apt: 
+      name: confluent-platform-oss-2.11
+      state: latest
+      update_cache: yes
+    when: "platform == 'amd64'"
+
+  - name: Make sure Confluent is started
+    sudo: yes
+    command: confluent start
+    when: "platform == 'amd64'"
+
+  ###############################
+  # Logstash & Elasticsearch & Kibana
+  ###############################
+  - name: Get Logstash
+    get_url:
+      url={{ elastic_download }}/downloads/logstash/logstash-{{ elastic_version }}.deb
+      dest=/opt/logstash.deb
+
+  - name: Install Logstash
+    apt: deb=/opt/logstash.deb
+
+  - name: Make sure Logstash autostarts, but is stopped until it is properly configured
+    service: name=logstash enabled=yes state=stopped
+
+  - name: Install Logstash Avro codec plugin
+    command: /usr/share/logstash/bin/logstash-plugin install logstash-codec-avro
+
+  - name: Get Elasticsearch
+    get_url:
+      url={{ elastic_download }}/downloads/elasticsearch/elasticsearch-{{ elastic_version }}.deb
+      dest=/opt/elasticsearch.deb
+
+  - name: Install Elasticsearch
+    apt: deb=/opt/elasticsearch.deb
+
+  - name: Make sure Elasticsearch autostarts, but is stopped until it is properly configured
+    service: name=elasticsearch enabled=yes state=stopped
+
+  - name: Get Kibana
+    get_url:
+      url={{ elastic_download }}/downloads/kibana/kibana-{{ elastic_version }}-{{ platform }}.deb
+      dest=/opt/kibana.deb
+
+  - name: Install Kibana
+    apt: deb=/opt/kibana.deb
+
+  - name: Make sure Kibana autostarts, but is stopped until it is properly configured
+    service: name=kibana enabled=yes state=stopped
+
+  - name: Make the shell scripts executable
+    file: path=/kafka-elastic/{{ item }} mode=0755
+    with_items:
+      - all.sh
+      - fix-time.sh

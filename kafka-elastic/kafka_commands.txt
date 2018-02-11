@@ -1,0 +1,14 @@
+# Load the configuration for JSON converter
+confluent load jdbc_source_mysql_demo -d /kafka-elastic/templates/kafka-connect-jdbc-source.json
+
+# Check status
+confluent status jdbc_source_mysql_demo
+
+# Test a sample consumer from Kafka
+kafka-console-consumer \
+--bootstrap-server localhost:9092 \
+--property print.key=true \
+--from-beginning \
+--topic mysql-foobar
+
+

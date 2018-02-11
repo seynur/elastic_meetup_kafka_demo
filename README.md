@@ -9,6 +9,7 @@ This is the demo environment for https://www.meetup.com/Turkey-Elastic-Fantastic
 * Includes a sample Kafka connect json file for reading data from MySQL
 * Use Logstash as a Kafka consumer to ingest data into Elasticsearch
 
+
 ## Vagrant and Ansible
 
 Do a simple `vagrant up` by using [Vagrant](https://www.vagrantup.com)'s [Ansible provisioner](https://www.vagrantup.com/docs/provisioning/ansible.html). All you need is a working [Vagrant installation](https://www.vagrantup.com/docs/installation/) (1.8.6+ but the latest version is always recommended), a [provider](https://www.vagrantup.com/docs/providers/) (tested with the latest [VirtualBox](https://www.virtualbox.org) version), and 2.5GB of RAM.
@@ -25,6 +26,31 @@ $ ansible-playbook /kafka-elastic/4_configure-mysql.yml
 ```
 
 Or if you are in a hurry, run all playbooks with `$ /kafka-elastic/all.sh` at once.
+
+## Kafka - Stream data out of MySQL
+Once all the tools are setup we can stream data out of MySQL.  In order to read data from MySQL, we need to configure Kafka as producer and load it from a JSON configuration file.
+
+To load the configuration via JSON converter, use the following command:
+```
+confluent load jdbc_source_mysql_demo -d /kafka-elastic/templates/kafka-connect-jdbc-source.json
+```
+
+```/kafka-elastic/templates/kafka-connect-jdbc-source.json``` file has all the details and necessary configurations to read from the newly created MySQL table (namely ```demo.foobar```)
+
+
+You can check the status of loaded configuration by running the following command:
+```
+confluent status jdbc_source_mysql_demo
+```
+
+In order to access Kafka topic as a consumer and test our input, run the following command:
+```
+kafka-console-consumer \
+--bootstrap-server localhost:9092 \
+--property print.key=true \
+--from-beginning \
+--topic mysql-foobar
+```
 
 ## Adding rows to MySQL
 You can do one of the following:

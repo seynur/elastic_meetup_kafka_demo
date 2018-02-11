@@ -45,6 +45,9 @@
   - name: Install pip to get current Python dependencies
     apt: name=python-pip state=latest
 
+  - name: Install jq for parsing json
+    apt: name=jq state=latest
+
   ###############################
   # MySQL
   ###############################

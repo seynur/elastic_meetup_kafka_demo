@@ -1,0 +1,7 @@
+elastic_version: 6.2.1
+elastic_download: https://artifacts.elastic.co
+mysql_root_password: root123
+mysql_import_file: templates/demo.sql
+mysql_import_update_file: templates/demo_update.sql
+mysql_connector_tgz: mysql-connector-java-5.1.45.tar.gz
+mysql_connector_jar: mysql-connector-java-5.1.45-bin.jar

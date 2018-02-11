@@ -76,9 +76,6 @@
   - name: Extract tar.gz file
     command: tar xz -C /tmp -f /tmp/{{ mysql_connector_tgz }}
 
-  - name: Copy jar file to Kafka Connect JDBC location
-    copy: src=/tmp/mysql-connector-java-5.1.45/{{ mysql_connector_jar }} dest=/usr/share/java/kafka-connect-jdbc/{{ mysql_connector_jar }}
-
 
   ###############################
   # Confluent
@@ -106,6 +103,9 @@
     sudo: yes
     command: confluent start
     when: "platform == 'amd64'"
+
+  - name: Copy jar file to Kafka Connect JDBC location
+    copy: src=/tmp/mysql-connector-java-5.1.45/{{ mysql_connector_jar }} dest=/usr/share/java/kafka-connect-jdbc/{{ mysql_connector_jar }}
 
   ###############################
   # Logstash & Elasticsearch & Kibana

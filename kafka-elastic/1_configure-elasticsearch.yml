@@ -68,27 +68,27 @@
           }
       }'
 
-#   - name: Set the default mapping for demo Kafka-connect JDBC input
-#    command: >
-#      curl -XPUT 'http://localhost:9200/_template/demo_kafka_template' -H "Content-Type: application/json" -d '{
-#          "index_patterns": ["kafka-*"],
-#          "order": 5,
-#          "mappings": {
-#            "type.name=kafka-connect": {
-#              "properties": {
-#                "c1": {
-#                  "type": "integer"
-#                }, 
-#                "c2": {
-#                  "type": "text"
-#                },
-#                "create_ts": {
-#                  "type": "date"
-#                }, 
-#                "update_ts": {
-#                  "type": "date"
-#                }
-#              }
-#            }
-#          }
-#      }'
+  - name: Set the default mapping for demo Kafka-connect JDBC input
+    command: >
+      curl -XPUT 'http://localhost:9200/_template/demo_kafka_template' -H "Content-Type: application/json" -d '{
+          "index_patterns": ["kafka-*"],
+          "order": 5,
+          "mappings": {
+            "doc": {
+              "properties": {
+                "c1": {
+                  "type": "integer"
+                }, 
+                "c2": {
+                  "type": "text"
+                },
+                "create_ts": {
+                  "type": "date"
+                }, 
+                "update_ts": {
+                  "type": "date"
+                }
+              }
+            }
+          }
+      }'
